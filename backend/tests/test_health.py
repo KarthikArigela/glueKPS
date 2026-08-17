@@ -1,0 +1,20 @@
+import pytest
+from httpx import AsyncClient
+
+@pytest.mark.anyio
+async def test_health_check(async_client: AsyncClient):
+    """Test /health endpoint returns 200 OK."""
+    response = await async_client.get("/health")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "ok"
+    assert "app" in data
+
+@pytest.mark.anyio
+async def test_health_db_check(async_client: AsyncClient):
+    """Test /health/db endpoint returns 200 OK and DB status."""
+    response = await async_client.get("/health/db")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "ok"
+    assert data["database"] == "connected"
