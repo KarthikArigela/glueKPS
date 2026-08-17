@@ -6,6 +6,7 @@ from sqlmodel import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import settings
 from app.database import engine, get_session
+from app.routers import captures
 
 try:
     APP_VERSION = version("Gluekps-backend")
@@ -27,6 +28,8 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.include_router(captures.router, prefix="/captures", tags=["Captures"])
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # For dev mode; tighten for production later
@@ -44,10 +47,10 @@ async def health_check():
 async def health_db_check(session: AsyncSession = Depends(get_session)):
     """Readiness probe: verifies database connection is active."""
     try:
-        result = await session.execute(text("SELECT 1;"))
-        result.scalar()
+        await session.execute(text("SELECT 1"))
         return {"status": "ok", "database": "connected"}
     except Exception as e:
+        print("DEBUG DB ERROR:", repr(e))
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"Database connection failed: {str(e)}"
