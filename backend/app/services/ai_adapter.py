@@ -19,11 +19,21 @@ class AIAdapter(Protocol):
 class OpenAIResponsesAdapter:
     def __init__(self):
         self.api_key = settings.OPENROUTER_API_KEY
-        self.model = settings.OPENROUTER_MODEL or "gpt-5.6-luna"
+        self.model = settings.OPENROUTER_MODEL
         self.base_url = settings.OPENROUTER_BASE_URL
 
+        if not self.api_key:
+            raise ValueError("AI API key is missing in .env! Please configure OPENROUTER_API_KEY.")
+        
+        if "openrouter.ai" in self.base_url:
+            self.provider_name = "openrouter"
+        elif "openai.com" in self.base_url:
+            self.provider_name = "openai"
+        else:
+            self.provider_name = self.base_url.split("//")[-1].split("/")[0]
+
         self.client = AsyncOpenAI(
-            api_key=self.api_key or "dummy-key-for-dev",
+            api_key=self.api_key,
             base_url=self.base_url,
             timeout=30.0,
         )

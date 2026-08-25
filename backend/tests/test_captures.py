@@ -11,11 +11,11 @@ async def test_create_and_get_capture(async_client: AsyncClient):
     create_res = await async_client.post("/captures/", json=payload)
     assert create_res.status_code == 201
     created_data = create_res.json()
-    assert created_data["raw_text"] == payload["raw_text"]
-    assert created_data["state"] == "pending_clarification"
-    assert "id" in created_data
+    assert "capture_id" in created_data
+    assert created_data["state"] in ["clarifying", "ready_for_proposal"]
+    assert "messages" in created_data
 
-    capture_id = created_data["id"]
+    capture_id = created_data["capture_id"]
 
     get_res = await async_client.get(f"/captures/{capture_id}")
     assert get_res.status_code == 200

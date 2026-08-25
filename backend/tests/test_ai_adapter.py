@@ -18,10 +18,11 @@ async def test_ai_telemetry_recording(async_session: AsyncSession):
     mock_response = '{"summary": "Quantum computing uses qubits for superdense computation.", "category": "physics"}'
     mock_latency = 245.5
 
+    adapter = OpenAIResponsesAdapter()
     op_record = await record_ai_operation(
         session=async_session,
-        provider="openai",
-        model="gpt-5.6-luna",
+        provider=adapter.provider_name,
+        model=adapter.model,
         prompt=mock_prompt,
         response=mock_response,
         latency_ms=mock_latency,
@@ -29,7 +30,7 @@ async def test_ai_telemetry_recording(async_session: AsyncSession):
     )
 
     assert op_record.id is not None
-    assert op_record.provider == "openai"
+    assert op_record.provider == adapter.provider_name
     assert op_record.latency_ms == 245.5
 
     statement = select(AIOperation).where(AIOperation.id == op_record.id)

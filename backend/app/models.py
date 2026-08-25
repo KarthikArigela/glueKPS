@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from sqlmodel import SQLModel, Field, Column, TEXT
+from sqlmodel import SQLModel, Field, Column, TEXT, JSON
 
 class HealthLog(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
@@ -19,8 +19,11 @@ class Capture(SQLModel, table=True):
     )
     user_id: uuid.UUID | None = Field(default=None, index=True, nullable=True)
     raw_text: str = Field(sa_column=Column(TEXT, nullable=False))
+    outcome: str | None = Field(default=None, nullable=True)
     kind: str = Field(default="text", nullable=False)
     state: str = Field(default="pending_clarification", nullable=False)
+
+    clarification_history: list[dict] = Field(default=[], sa_column=Column(JSON, nullable=False))
 
     created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
     updated_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
@@ -37,7 +40,7 @@ class AIOperation(SQLModel, table=True):
     user_id: uuid.UUID | None = Field(default=None, index=True, nullable=True)
     capture_id: uuid.UUID | None = Field(default=None, index=True, nullable=True)
     
-    provider: str = Field(default="openrouter", nullable=False)
+    provider: str = Field(nullable=False)
     model: str = Field(nullable=False)
     prompt: str = Field(sa_column=Column(TEXT, nullable=False))
     response: str = Field(sa_column=Column(TEXT, nullable=False))
