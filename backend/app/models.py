@@ -48,3 +48,29 @@ class AIOperation(SQLModel, table=True):
     cost_estimate_usd: float = Field(default=0.0, nullable=False)
     confidence_score: float | None = Field(default=None, nullable=True)
     created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
+
+class Task(SQLModel, table=True):
+    __tablename__ = "tasks"
+    
+    id: uuid.UUID = Field(
+        default_factory=uuid.uuid4,
+        primary_key=True,
+        index=True,
+        nullable=False,
+    )
+    user_id: uuid.UUID | None = Field(default=None, index=True, nullable=True)
+    capture_id: uuid.UUID | None = Field(default=None, index=True, nullable=True)
+    parent_task_id: uuid.UUID | None = Field(default=None, index=True, nullable=True)
+    
+    title: str = Field(nullable=False)
+    task_type: str = Field(default="task", nullable=False)
+    status: str = Field(default="proposed", nullable=False)
+    
+    task_instructions: str | None = Field(default=None, nullable=True)
+    definition_of_done: str | None = Field(default=None, nullable=True)
+    session_estimate_minutes: int | None = Field(default=None, nullable=True)
+    
+    order_index: int = Field(default=0, nullable=False)
+    
+    created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
+    updated_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)

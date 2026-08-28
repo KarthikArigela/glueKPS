@@ -72,3 +72,19 @@ class ClarificationResponse(BaseModel):
     reasoning: str
     summary_so_far: str | None
     messages: list[dict]
+
+class TaskNode(BaseModel):
+    id: uuid.UUID | None = None
+    title: str
+    task_type: str = Field(default="task")
+    status: str = Field(default="proposed")
+    task_instructions: str | None = None
+    definition_of_done: str | None = None
+    session_estimate_minutes: int | None = None
+    subtasks: list["TaskNode"] = []
+
+class LLMProposalOutput(BaseModel):
+    capture_id: uuid.UUID | None = None
+    root_project: TaskNode | None = None
+    standalone_tasks: list[TaskNode] = []
+    reasoning: str | None = None
