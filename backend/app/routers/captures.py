@@ -4,8 +4,9 @@ from sqlmodel import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_session
 from app.models import Capture
-from app.schemas import CaptureCreate, CaptureRead, ClarifyAnswerCreate, ClarificationResponse
+from app.schemas import CaptureCreate, CaptureRead, ClarifyAnswerCreate, ClarificationResponse, LLMProposalOutput
 from app.services.clarification_engine import ClarificationEngine
+from app.services.proposal_engine import ProposalEngine
 
 router = APIRouter()
 
@@ -104,3 +105,37 @@ async def clarify_capture(
     )
     
     return response
+
+@router.post(
+    "/{capture_id}/proposal",
+    response_model=LLMProposalOutput,
+    summary="Generate a Task Tree proposal based on the Clarification details"
+)
+async def propose_task_tree(
+    capture_id: uuid.UUID,
+    session: AsyncSession = Depends(get_session)
+):
+    """Generate a Task Tree proposal based on the Clarification details."""
+
+    statement = select(Capture).where(Capture.id == capture_id)
+    result = await session.execute(statement)
+    capture = result.scalar_one_or_none()
+
+    if not capture:
+        raise HTTPException(status_code=404, detail="Capture not found")
+
+    if capture.state != "ready_for_proposal":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Capture is not ready for proposal generation",
+        )
+    
+    engine = ProposalEngine()   
+    proposal = await engine.generate_tree_proposal(
+        session=session,
+        capture_id=capture.id,
+        raw_text=capture.raw_text,
+        clarification_history=capture.clarification_history or [],
+    )
+    
+    return proposal
